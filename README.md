@@ -1,0 +1,2 @@
+# chatik
+  npm run dev
