@@ -76,7 +76,7 @@ const verifyUserToken = async token => {
     });
     const payload = ticket.getPayload();
     const userid = payload['sub'];
-    console.log('User ID: ', userid);
+    //console.log('User ID: ', userid);
 }
 
 const checkUser = (req, res, next) => {
@@ -98,6 +98,15 @@ app.use(async(req, res, next) => {
     } catch (error) {
         res.locals.checkedUser = false
     }
+    next()
+})
+
+io.use((socket, next) => {
+    const username = socket.handshake.auth.username
+    if (!username) {
+        return next(new Error("invalid username"))
+    }
+    socket.username = username;
     next()
 })
 
@@ -142,8 +151,8 @@ app.use((req, res) => {
 ////////////////////////////////
 ///////Socket is working////////
 ////////////////////////////////
-io.sockets.on('connection', socket => {
-    console.log(chalk.bgBlueBright('User is connected'))
+io.on('connection', socket => {
+    console.log(chalk.bgBlueBright(`User ${socket.username} is connected`))
 
     socket.emit('initialize history', { lastMessage })
 
@@ -153,11 +162,7 @@ io.sockets.on('connection', socket => {
 
     socket.on('disconnect', data => {
         connections.splice(connections.indexOf(socket), 1)
-        console.log(chalk.bgRedBright('User is disconnected'));
-    })
-
-    socket.on('get files from chatroom', data => {
-
+        console.log(chalk.bgRedBright(`User ${socket.username} is disconnected`));
     })
 
     socket.on('get history', data => {
@@ -177,7 +182,7 @@ io.sockets.on('connection', socket => {
     socket.on('send message', async data => {
 
         if (data.type !== 'text') {
-            //Загрузить файл на сервер
+            //Download file to server
             let file
             data.type == '' ? file = `${data.filename}` : file = `${data.filename}.${data.type}`
             try {
@@ -191,7 +196,7 @@ io.sockets.on('connection', socket => {
 
         const messageData = {
             data: data.data,
-            name: data.name,
+            name: socket.username,
             type: data.type
         }
 
