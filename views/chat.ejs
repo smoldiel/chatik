@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Chatik</title>
+    <meta name="description" content="">
+    <meta name="color-scheme" content="dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.1.3/dist/css/bootstrap-night.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/main.css">
+</head>
+
+<body class="d-flex h-100 text-white bg-dark">
+
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <header>
+            <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+                <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
+
+                    <span class="fs-4">Chatik<span id="blinking">_</span></span>
+                </a>
+                <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+                    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exampleModal">File browser</button>
+                    <button type="button" class="btn btn-link" id="buttonHistory">Load history</button>
+                    <a class="py-2 text-dark text-decoration-none" href="/logout">Logout</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Modal File Browser -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Files from general chat</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div id="fileBrowserModalBody"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <h3>General chat</h3>
+            <!-- Вывод всех сообщений будет здесь -->
+            <div class="border border-light msg_card_body" id="all_mess">
+
+            </div>
+        </div>
+
+        <div class="col">
+            <form id="messForm">
+                <br>
+                <div class="form-floating">
+                    <input type="text" name="name" id="name" class="form-control" placeholder=" ">
+                    <label for="name">Name</label>
+                </div>
+                <br>
+                <div class="form-floating">
+                    <input type="text" name="message" id="message" class="form-control" placeholder=" "></input>
+                    <label for="message">Message</label>
+                </div>
+                <input class="form-control form-control-sm" id="formFileSm" type="file" onchange="readFile(this)">
+                <br>
+                <input type="submit" value="Send" class="btn btn-outline-primary">
+            </form>
+        </div>
+
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/main.js"></script>
+</body>
+
+</html>

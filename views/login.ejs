@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Login to Chatik_</title>
+    <meta name="description" content="">
+    <meta name="color-scheme" content="dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="/main.css">
+</head>
+
+<body class="d-flex h-100 text-center">
+
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <header>
+            <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+                <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
+                    <span class="fs-4">Chatik<span id="blinking">_</span></span>
+                </a>
+            </div>
+        </header>
+        <main class="px-3">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <h1>Welcome to our chat!</h1>
+            <br>
+            <p class="lead">Want to login? If you have Google account just click button below :)</p>
+            <div id="g_id_onload" data-client_id="690604498042-u171b94ejc2t9p8j80dth655n20keism.apps.googleusercontent.com" data-login_uri="http://localhost:3000/auth" data-auto_prompt="false"></div>
+            <!--Grid row-->
+            <div class="row d-flex justify-content-center">
+
+                <!--Grid column-->
+                <div class="col-md-6">
+
+                    <div class="g_id_signin text-center" data-type="standard" data-size="large" data-theme="filled_blue" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left" data-width=300></div>
+
+                </div>
+                <!--Grid column-->
+
+            </div>
+            <!--Grid row-->
+
+        </main>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/main.js"></script>
+</body>
+
+</html>

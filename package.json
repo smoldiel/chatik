@@ -1,0 +1,26 @@
+{
+    "name": "gchat",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "main": "app.js",
+    "scripts": {
+        "dev": "nodemon app.js",
+        "start": "node app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "chalk": "^5.0.1",
+        "cookie-parser": "^1.4.6",
+        "dotenv": "^16.0.1",
+        "ejs": "^3.1.8",
+        "express": "^4.18.1",
+        "firebase": "^9.8.3",
+        "google-auth-library": "^8.0.2",
+        "jwt-decode": "^3.1.2",
+        "nodemon": "^2.0.16",
+        "socket.io": "^4.5.1"
+    }
+}
