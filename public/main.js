@@ -1,4 +1,4 @@
-let socket = io.connect()
+let socket = io({ autoConnect: false })
 let $form = $('#messForm')
 let $userName = $('#name')
 let $message = $('#message')
@@ -8,6 +8,16 @@ let $buttonHistory = $('#buttonHistory')
 let $fileBrowserBody = $('#fileBrowserModalBody')
 let $blinking = $('#blinking')
 let file
+
+const setUserName = (err) => {
+    $userName.val('')
+    let username = prompt('Enter ur username')
+    socket.auth = { username }
+    socket.connect()
+    $userName.val(username)
+}
+
+setUserName()
 
 const blink_speed = 1000
 const t = setInterval(() => {
@@ -23,16 +33,9 @@ function readFile(input) {
     file = input.files[0]
 }
 
-const socketGetFilesFromChatroom = room => {
-    socket.emit('get files from chatroom', {
-        room
-    })
-}
-
-const socketSendMessage = (data, name, type, filename = false) => {
+const socketSendMessage = (data, type, filename = false) => {
     socket.emit('send message', {
         data,
-        name,
         type,
         filename
     })
@@ -81,11 +84,9 @@ const FILE_HOST = "http://localhost:3000/user_files"
 
 $(function() {
 
-    socketGetFilesFromChatroom('general')
-
     $form.submit(event => {
         event.preventDefault()
-        const nameSender = $userName.val() ? $userName.val() : 'Anonymous'
+            //const nameSender = $userName.val() ? $userName.val() : 'Anonymous'
         if (file) {
             const fileObject = $file.val().replace(/^.*[\\\/]/, '')
             const fileName = fileObject.substring(0, fileObject.lastIndexOf('.')) || fileObject
@@ -97,16 +98,16 @@ $(function() {
             let reader = new FileReader()
             reader.readAsArrayBuffer(file)
             reader.onload = () => {
-                socketSendMessage(reader.result, nameSender, fileType, fileName)
-                $allMessages.append(buildMessageWindow(fileName, nameSender, fileType, true))
+                socketSendMessage(reader.result, fileType, fileName)
+                $allMessages.append(buildMessageWindow(fileName, 'You', fileType, true))
                 $allMessages.scrollTop($allMessages[0].scrollHeight)
             }
             reader.onerror = () => {
                 console.log(reader.error);
             }
         } else {
-            socketSendMessage($message.val(), nameSender, 'text')
-            $allMessages.append(buildMessageWindow($message.val(), nameSender, 'text', true))
+            socketSendMessage($message.val(), 'text')
+            $allMessages.append(buildMessageWindow($message.val(), 'You', 'text', true))
             $allMessages.scrollTop($allMessages[0].scrollHeight)
             $message.val('')
         }
@@ -129,5 +130,12 @@ $(function() {
     socket.on('add message', data => {
         $allMessages.append(buildMessageWindow(data.data, data.name, data.type))
         $allMessages.scrollTop($allMessages[0].scrollHeight)
+    })
+
+    socket.on("connect_error", err => {
+        if (err.message === "invalid username") {
+            alert('Invalid username')
+            setUserName()
+        }
     })
 })
