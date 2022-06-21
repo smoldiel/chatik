@@ -1,4 +1,4 @@
-# chatik
+# chatik_
 npm run start
 
-private message to user: @nickname your-message
+Private message to user: @nickname your-message
