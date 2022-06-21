@@ -7,14 +7,9 @@ let $file = $('#formFileSm')
 let $buttonHistory = $('#buttonHistory')
 let $fileBrowserBody = $('#fileBrowserModalBody')
 let $blinking = $('#blinking')
+let $onlineUserCounter = $('#onlineu')
 let file
 let users
-
-/**
- * TODO:
- * ? Разбить по модулям шо можно
- * ? Перделки и свистелки (юзер печатает, кто зашел, кто вышел, скока онлайн) 
- */
 
 const cleanInput = input => {
     return $('<div/>').text(input).html()
@@ -23,10 +18,15 @@ const cleanInput = input => {
 const setUserName = (err) => {
     $userName.val('')
     let dirtyUsername = prompt('Enter ur username')
-    let username = cleanInput(dirtyUsername.trim())
-    socket.auth = { username }
-    socket.connect()
-    $userName.val(username)
+    if (dirtyUsername !== null) {
+        let username = cleanInput(dirtyUsername.trim())
+        socket.auth = { username }
+        socket.connect()
+        $userName.val(username)
+    } else {
+        setUserName()
+    }
+
 }
 
 setUserName()
@@ -161,7 +161,6 @@ $(function() {
                     $allMessages.append(buildMessageWindow(message, 'You', 'text', true))
                     $message.val('')
                 } else {
-                    //TODO: Display service message
                     $allMessages.append(buildServiceMessageWindow(`Cannot send message to ${result[1]}`))
                 }
             } else {
@@ -198,8 +197,21 @@ $(function() {
     })
 
     socket.on('user list', data => {
-        console.log(data.users)
         users = data.users
+        let size = Object.keys(users).length
+        $onlineUserCounter.text(size)
+    })
+
+    socket.on('enter user', data => {
+        let message = `<i>User ${data.user} is connected</i>`
+        $allMessages.append(buildServiceMessageWindow(message))
+        $allMessages.scrollTop($allMessages[0].scrollHeight)
+    })
+
+    socket.on('exit user', data => {
+        let message = `<i>User ${data.user} is disconnected</i>`
+        $allMessages.append(buildServiceMessageWindow(message))
+        $allMessages.scrollTop($allMessages[0].scrollHeight)
     })
 
     socket.on("connect_error", err => {

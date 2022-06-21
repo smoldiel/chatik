@@ -1,8 +1,16 @@
 .msg_card_body {
     overflow-y: scroll;
-    height: 250px;
+    height: 300px;
 }
 
 .cover-container {
     max-width: 42em;
+}
+
+.online-u {
+    color: rgb(97, 97, 97);
+}
+
+.onlineu {
+    color: rgb(0, 194, 58);
 }

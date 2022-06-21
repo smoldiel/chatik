@@ -2,7 +2,6 @@ import express from 'express'
 import http from 'http'
 import cookieParser from 'cookie-parser'
 import chalk from 'chalk'
-import jwt_decode from 'jwt-decode'
 import { OAuth2Client } from 'google-auth-library'
 import { Server } from 'socket.io'
 import path from 'path'
@@ -14,11 +13,19 @@ import { appendFile } from 'node:fs/promises'
 const __filename = fileURLToPath(
     import.meta.url)
 
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(__filename)
+
+const port = process.env.PORT || 3000
 
 const CLIENT_ID = '690604498042-u171b94ejc2t9p8j80dth655n20keism.apps.googleusercontent.com'
 
 const HISTORY_LIMIT = 100
+
+let lastMessage
+
+let filesFromGeneralChat
+
+let users = {}
 
 const firebaseConfig = {
     apiKey: "AIzaSyAWM8Dl-nLo_N9eQXt9oHFvlSkKfMli7og",
@@ -34,34 +41,21 @@ const fireApp = initializeApp(firebaseConfig)
 
 const db = getDatabase(fireApp)
 
-let lastMessage
-let filesFromGeneralChat
-
-const updateLastMessage = data => {
-    lastMessage = data
-}
-const updatefilesFromGeneralChat = data => {
-    filesFromGeneralChat = data
-}
-
 const lastMessageRef = ref(db, 'chats/general/lastMessage')
 onValue(lastMessageRef, snapshot => {
     const data = snapshot.val()
-    updateLastMessage(data)
+    lastMessage = data
 })
+
 const filesFromGeneralChatRef = ref(db, 'files/general')
 onValue(filesFromGeneralChatRef, snapshot => {
     const data = snapshot.val()
-    updatefilesFromGeneralChat(data)
+    filesFromGeneralChat = data
 })
-
-const port = process.env.PORT || 3000
 
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
-
-let users = {}
 
 ////////////////////////////////
 ////////!G-verification/////////
@@ -75,11 +69,15 @@ const verifyUserToken = async token => {
     });
     const payload = ticket.getPayload();
     const userid = payload['sub'];
-    //console.log('User ID: ', userid);
+    //?console.log('User ID: ', userid);
 }
 
 const checkUser = (req, res, next) => {
     res.locals.checkedUser ? next() : res.redirect('/login')
+}
+
+const wordCount = str => {
+    return str.split(" ").length
 }
 
 ////////////////////////////////
@@ -103,7 +101,7 @@ app.use(async(req, res, next) => {
 //*Check unique username
 io.use((socket, next) => {
     const username = socket.handshake.auth.username
-    if (!username) {
+    if (!username || wordCount(username) !== 1) {
         return next(new Error("invalid username"))
     }
     if (username in users) {
@@ -129,7 +127,7 @@ app.post('/auth', async(req, res) => {
 ////////////!Routes/////////////
 ////////////////////////////////
 app.get('/', checkUser, (req, res) => {
-    res.render('index')
+    res.redirect('/chat')
 })
 
 app.get('/login', (req, res) => {
@@ -165,10 +163,13 @@ io.on('connection', socket => {
 
     socket.emit('send files from chatroom', { filesFromGeneralChat })
 
+    socket.broadcast.emit('enter user', { user: socket.username })
+
     socket.on('disconnect', data => {
+        console.log(chalk.bgRedBright(`User ${socket.username} is disconnected`))
         delete users[socket.username]
         io.emit('user list', { users })
-        console.log(chalk.bgRedBright(`User ${socket.username} is disconnected`));
+        socket.broadcast.emit('exit user', { user: socket.username })
     })
 
     socket.on('get history', data => {
@@ -196,7 +197,7 @@ io.on('connection', socket => {
     socket.on('send message', async data => {
 
         if (data.type !== 'text') {
-            //Download file to server
+            //*Download file to server
             let file
             data.type == '' ? file = `${data.filename}` : file = `${data.filename}.${data.type}`
             try {
