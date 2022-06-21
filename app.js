@@ -61,11 +61,10 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
-let users = []
-let connections = []
+let users = {}
 
 ////////////////////////////////
-////////G-verification//////////
+////////!G-verification/////////
 ////////////////////////////////
 const client = new OAuth2Client(CLIENT_ID);
 
@@ -84,7 +83,7 @@ const checkUser = (req, res, next) => {
 }
 
 ////////////////////////////////
-//////////Middlewares///////////
+//////////!Middlewares//////////
 ////////////////////////////////
 app.use(express.static(__dirname + '/public'))
 app.use(express.json())
@@ -101,10 +100,14 @@ app.use(async(req, res, next) => {
     next()
 })
 
+//*Check unique username
 io.use((socket, next) => {
     const username = socket.handshake.auth.username
     if (!username) {
         return next(new Error("invalid username"))
+    }
+    if (username in users) {
+        return next(new Error("name is already used"))
     }
     socket.username = username;
     next()
@@ -114,7 +117,7 @@ io.use((socket, next) => {
 app.set('view engine', 'ejs')
 
 ////////////////////////////////
-////Endpoint for G-identity/////
+////!Endpoint for G-identity////
 ////////////////////////////////
 app.post('/auth', async(req, res) => {
     const token = req.body.credential
@@ -123,7 +126,7 @@ app.post('/auth', async(req, res) => {
 })
 
 ////////////////////////////////
-////////////Routes//////////////
+////////////!Routes/////////////
 ////////////////////////////////
 app.get('/', checkUser, (req, res) => {
     res.render('index')
@@ -149,19 +152,22 @@ app.use((req, res) => {
 })
 
 ////////////////////////////////
-///////Socket is working////////
+//////!Socket is working////////
 ////////////////////////////////
 io.on('connection', socket => {
     console.log(chalk.bgBlueBright(`User ${socket.username} is connected`))
+
+    users[socket.username] = socket.id
+
+    io.emit('user list', { users })
 
     socket.emit('initialize history', { lastMessage })
 
     socket.emit('send files from chatroom', { filesFromGeneralChat })
 
-    connections.push(socket)
-
     socket.on('disconnect', data => {
-        connections.splice(connections.indexOf(socket), 1)
+        delete users[socket.username]
+        io.emit('user list', { users })
         console.log(chalk.bgRedBright(`User ${socket.username} is disconnected`));
     })
 
@@ -176,6 +182,14 @@ io.on('connection', socket => {
             }
         }).catch(err => {
             console.error(err)
+        })
+    })
+
+    socket.on('private message', data => {
+        socket.to(data.to).emit('private message', {
+            data: data.data,
+            from: socket.username,
+            separator: data.separator
         })
     })
 
@@ -217,7 +231,7 @@ io.on('connection', socket => {
 })
 
 ////////////////////////////////
-//////////Start server//////////
+//////////!Start server/////////
 ////////////////////////////////
 server.listen(port, () => {
     console.log(chalk.bgGreen(`Server is running on localhost:${port}`));
