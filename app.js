@@ -68,8 +68,8 @@ const verifyUserToken = async token => {
         audience: CLIENT_ID
     });
     const payload = ticket.getPayload();
-    const userid = payload['sub'];
-    //?console.log('User ID: ', userid);
+    const userid = payload['sub']
+    //?console.log('User ID: ', userid)
 }
 
 const checkUser = (req, res, next) => {
@@ -202,9 +202,9 @@ io.on('connection', socket => {
             data.type == '' ? file = `${data.filename}` : file = `${data.filename}.${data.type}`
             try {
                 await appendFile(`./public/user_files/${file}`, data.data)
-                console.log("File has been saved");
+                console.log("File has been saved")
             } catch (error) {
-                console.log(error);
+                console.log(error)
             }
             data.data = data.filename
         }
@@ -235,5 +235,5 @@ io.on('connection', socket => {
 //////////!Start server/////////
 ////////////////////////////////
 server.listen(port, () => {
-    console.log(chalk.bgGreen(`Server is running on localhost:${port}`));
+    console.log(chalk.bgGreen(`Server is running on localhost:${port}`))
 })
