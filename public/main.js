@@ -8,10 +8,22 @@ let $buttonHistory = $('#buttonHistory')
 let $fileBrowserBody = $('#fileBrowserModalBody')
 let $blinking = $('#blinking')
 let file
+let users
+
+/**
+ * TODO:
+ * ? Разбить по модулям шо можно
+ * ? Перделки и свистелки (юзер печатает, кто зашел, кто вышел, скока онлайн) 
+ */
+
+const cleanInput = input => {
+    return $('<div/>').text(input).html()
+}
 
 const setUserName = (err) => {
     $userName.val('')
-    let username = prompt('Enter ur username')
+    let dirtyUsername = prompt('Enter ur username')
+    let username = cleanInput(dirtyUsername.trim())
     socket.auth = { username }
     socket.connect()
     $userName.val(username)
@@ -33,12 +45,46 @@ function readFile(input) {
     file = input.files[0]
 }
 
-const socketSendMessage = (data, type, filename = false) => {
+const socketSendPublicMessage = (data, type, filename = false) => {
     socket.emit('send message', {
         data,
         type,
         filename
     })
+}
+
+const socketSendPrivateMessage = (data, to, separator) => {
+    socket.emit('private message', {
+        data,
+        to,
+        separator
+    })
+}
+
+const buildServiceMessageWindow = data => {
+    let renderedMessage = `
+        <div class="card">
+            <div class="card card-body">
+                <p class="card-text">${data}</p>
+            </div>
+        </div>
+    `
+    return renderedMessage
+}
+
+const buildPrivateMessageWindow = (data, from, separator) => {
+    let message = data.split(separator)
+    console.log(separator)
+    console.log(message)
+    let renderedMessage = `
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Private message from ${from}</h6>
+                <p class="card-text">${message[1]}</p>
+            </div>
+        </div>
+    `
+    return renderedMessage
 }
 
 const buildMessageWindow = (data, name, type, my = false) => {
@@ -73,8 +119,8 @@ const buildFileWindow = (data, name, type, my = false) => {
 const renderList = (objectsFromDB, buildingFunction, appendBody) => {
     let collection = ``
     const snapshot = objectsFromDB
-    for (const object in objectsFromDB) {
-        collection += buildingFunction(objectsFromDB[object].data, objectsFromDB[object].name, objectsFromDB[object].type)
+    for (const object in snapshot) {
+        collection += buildingFunction(snapshot[object].data, snapshot[object].name, snapshot[object].type)
     }
     appendBody.html('')
     appendBody.append(collection)
@@ -98,7 +144,7 @@ $(function() {
             let reader = new FileReader()
             reader.readAsArrayBuffer(file)
             reader.onload = () => {
-                socketSendMessage(reader.result, fileType, fileName)
+                socketSendPublicMessage(reader.result, fileType, fileName)
                 $allMessages.append(buildMessageWindow(fileName, 'You', fileType, true))
                 $allMessages.scrollTop($allMessages[0].scrollHeight)
             }
@@ -106,10 +152,24 @@ $(function() {
                 console.log(reader.error);
             }
         } else {
-            socketSendMessage($message.val(), 'text')
-            $allMessages.append(buildMessageWindow($message.val(), 'You', 'text', true))
+            let message = cleanInput($message.val().trim())
+            if (message.startsWith('@')) {
+                //TODO
+                let result = message.match(/@([^ ]*) /)
+                if ((result[1] in users) && ($userName.val() !== result[1])) {
+                    socketSendPrivateMessage(message, users[result[1]], result[0])
+                    $allMessages.append(buildMessageWindow(message, 'You', 'text', true))
+                    $message.val('')
+                } else {
+                    //TODO: Display service message
+                    $allMessages.append(buildServiceMessageWindow(`Cannot send message to ${result[1]}`))
+                }
+            } else {
+                socketSendPublicMessage(message, 'text')
+                $allMessages.append(buildMessageWindow(message, 'You', 'text', true))
+                $message.val('')
+            }
             $allMessages.scrollTop($allMessages[0].scrollHeight)
-            $message.val('')
         }
     });
 
@@ -132,9 +192,24 @@ $(function() {
         $allMessages.scrollTop($allMessages[0].scrollHeight)
     })
 
+    socket.on('private message', data => {
+        $allMessages.append(buildPrivateMessageWindow(data.data, data.from, data.separator))
+        $allMessages.scrollTop($allMessages[0].scrollHeight)
+    })
+
+    socket.on('user list', data => {
+        console.log(data.users)
+        users = data.users
+    })
+
     socket.on("connect_error", err => {
         if (err.message === "invalid username") {
             alert('Invalid username')
+            setUserName()
+        }
+
+        if (err.message === "name is already used") {
+            alert('Name is already used. Please choose an another name')
             setUserName()
         }
     })
