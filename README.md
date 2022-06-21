@@ -1,2 +1,3 @@
 # chatik
-  npm run dev
+  npm run start
+  private message to user: @nickname your-message
