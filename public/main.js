@@ -154,7 +154,6 @@ $(function() {
         } else {
             let message = cleanInput($message.val().trim())
             if (message.startsWith('@')) {
-                //TODO
                 let result = message.match(/@([^ ]*) /)
                 if ((result[1] in users) && ($userName.val() !== result[1])) {
                     socketSendPrivateMessage(message, users[result[1]], result[0])
